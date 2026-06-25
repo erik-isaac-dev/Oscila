@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSCILA ID - Configurador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        oscila: {
+                            50: '#fff1f2',
+                            500: '#ff3b30', // Rojo táctico
+                            600: '#e12c22',
+                            900: '#881337',
+                        },
+                        wa: '#25d366' // Verde WhatsApp
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+        
+        .glass-card {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .input-tactical {
+            background: rgba(9, 9, 11, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .input-tactical:focus-within {
+            border-color: #ff3b30;
+            box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+        }
+
+        /* Ocultar flechas en inputs tipo number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        /* Animaciones suaves */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-enter { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 relative">
+
+    <div id="privacy-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl max-w-sm text-center shadow-2xl mx-4 transform transition-transform scale-100">
+            <div class="w-16 h-16 bg-oscila-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ff3b30" viewBox="0 0 256 256"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-68-56a12,12,0,1,1-12-12A12,12,0,0,1,140,152Z"></path></svg>
+            </div>
+            <h3 class="text-white font-bold text-xl mb-2">Privacidad Total</h3>
+            <p class="text-zinc-400 text-sm mb-6 leading-relaxed">
+                Esta página funciona 100% en tu dispositivo. <strong class="text-zinc-200">No guardamos, enviamos ni almacenamos</strong> tu información. Solo te ayudamos a generar el enlace para tu OSCILA ID.
+            </p>
+            <button onclick="closeModal()" class="w-full bg-oscila-500 hover:bg-oscila-600 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg shadow-oscila-500/20">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <header class="w-full max-w-lg mb-8 text-center flex flex-col items-center">
+        <!-- Logo con el tamaño h-24 que configuraste -->
+        <img src="OSCSF.PNG" alt="OSCILA ID Logo" class="h-24 mb-4 object-contain">
+        <p class="text-sm text-zinc-400">Generador de enlaces de emergencia para OSCILA ID</p>
+    </header>
+
+    <!-- Espacio reservado para monetización (Google AdSense) -->
+    <div class="w-full max-w-lg bg-zinc-800/30 border border-zinc-800 rounded-xl p-4 mb-6 flex items-center justify-center text-zinc-500 text-xs text-center min-h-[60px]">
+        Espacio Reservado para Banner Publicitario
+    </div>
+
+    <main class="w-full max-w-lg glass-card rounded-3xl p-6 shadow-2xl mb-8">
+        
+        <!-- Tabs de Selección -->
+        <div class="flex p-1 bg-zinc-900/80 rounded-xl mb-6 overflow-hidden border border-zinc-800">
+            <button id="tab-mascotas" onclick="switchTab('mascotas')" class="flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-zinc-800 text-white shadow transition-all">
+                🐾 Mascotas
+            </button>
+            <button id="tab-medica" onclick="switchTab('medica')" class="flex-1 py-2.5 text-xs sm:text-sm font-medium rounded-lg text-zinc-400 hover:text-white transition-all">
+                🏥 Médica
+            </button>
+            <button id="tab-familiares" onclick="switchTab('familiares')" class="flex-1 py-2.5 text-xs sm:text-sm font-medium rounded-lg text-zinc-400 hover:text-white transition-all">
+                👤 Familiar
+            </button>
+        </div>
+
+        <!-- FORMULARIO MASCOTAS -->
+        <div id="form-mascotas" class="space-y-5 transition-opacity duration-300">
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">WhatsApp del Contacto de Emergencia</label>
+                <div class="flex items-center input-tactical rounded-xl px-3 py-1">
+                    <span class="text-zinc-500 font-medium pl-1 pr-2">+</span>
+                    <input type="tel" id="m-tel" placeholder="52 123 456 7890" class="bg-transparent border-none outline-none w-full text-white py-2" oninput="generateLink()">
+                </div>
+                <p id="m-tel-error" class="text-[11px] text-oscila-500 mt-1.5 hidden font-medium">⚠️ Revisa el número. Debe tener entre 10 y 15 dígitos.</p>
+                <p class="text-[10px] text-zinc-500 mt-1.5 leading-tight">Incluye el código de tu país. El número debe tener WhatsApp y aceptar llamadas de números desconocidos.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Nombre de la Mascota</label>
+                <input type="text" id="m-nombre" placeholder="Ej. Max" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Alergias o Condiciones</label>
+                <input type="text" id="m-alergias" placeholder="Ej. Alergia al pollo" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+        </div>
+
+        <!-- FORMULARIO MÉDICA -->
+        <div id="form-medica" class="space-y-5 hidden opacity-0 transition-opacity duration-300">
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">WhatsApp del Contacto de Emergencia</label>
+                <div class="flex items-center input-tactical rounded-xl px-3 py-1">
+                    <span class="text-zinc-500 font-medium pl-1 pr-2">+</span>
+                    <input type="tel" id="h-tel" placeholder="52 123 456 7890" class="bg-transparent border-none outline-none w-full text-white py-2" oninput="generateLink()">
+                </div>
+                <p id="h-tel-error" class="text-[11px] text-oscila-500 mt-1.5 hidden font-medium">⚠️ Revisa el número. Debe tener entre 10 y 15 dígitos.</p>
+                <p class="text-[10px] text-zinc-500 mt-1.5 leading-tight">Incluye el código de tu país. El número debe tener WhatsApp y aceptar llamadas de números desconocidos.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Nombre del Portador</label>
+                <input type="text" id="h-nombre" placeholder="Ej. Roberto Sánchez" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-1">Tipo de Sangre</label>
+                    <input type="text" id="h-sangre" placeholder="Ej. O+" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-1">Alergias</label>
+                    <input type="text" id="h-alergias-medica" placeholder="Ej. Penicilina" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Condición Médica</label>
+                <input type="text" id="h-condicion" placeholder="Ej. Diabético o Hipertenso" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+        </div>
+
+        <!-- FORMULARIO FAMILIAR -->
+        <div id="form-familiares" class="space-y-5 hidden opacity-0 transition-opacity duration-300">
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">WhatsApp del Contacto de Emergencia</label>
+                <div class="flex items-center input-tactical rounded-xl px-3 py-1">
+                    <span class="text-zinc-500 font-medium pl-1 pr-2">+</span>
+                    <input type="tel" id="f-tel" placeholder="52 123 456 7890" class="bg-transparent border-none outline-none w-full text-white py-2" oninput="generateLink()">
+                </div>
+                <p id="f-tel-error" class="text-[11px] text-oscila-500 mt-1.5 hidden font-medium">⚠️ Revisa el número. Debe tener entre 10 y 15 dígitos.</p>
+                <p class="text-[10px] text-zinc-500 mt-1.5 leading-tight">Incluye el código de tu país. El número debe tener WhatsApp y aceptar llamadas de números desconocidos.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Nombre del Portador (Niño/Adulto)</label>
+                <input type="text" id="f-nombre" placeholder="Ej. María Pérez" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Condición Médica</label>
+                <input type="text" id="f-condicion" placeholder="Ej. Alzheimer, Autismo" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Alergias</label>
+                <input type="text" id="f-alergias" placeholder="Ej. Penicilina, Nueces" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+            <div>    
+                <label class="block text-xs font-medium text-zinc-400 mb-1">Instrucciones al encontrarlo</label>
+                <input type="text" id="f-instrucciones" placeholder="Ej. Háblele con calma, ofrézcale agua" class="w-full input-tactical rounded-xl px-4 py-3" oninput="generateLink()">
+            </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-zinc-800">
+            <div class="flex justify-between items-end mb-2">
+                <label class="block text-sm font-semibold text-white">Enlace para grabar en el chip:</label>
+                <span id="char-counter" class="text-xs font-mono text-wa bg-wa/10 px-2 py-1 rounded">0 / 400 bytes</span>
+            </div>
+            
+            <textarea id="final-link" readonly class="w-full h-24 input-tactical rounded-xl px-4 py-3 font-mono text-xs text-zinc-300 resize-none focus:outline-none focus:border-oscila-500" placeholder="Llena los datos para generar el enlace..."></textarea>
+
+            <div class="w-full bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div id="capacity-bar" class="bg-wa h-full rounded-full transition-all duration-300 w-0"></div>
+            </div>
+
+            <!-- Aviso de verificación -->
+            <div class="mt-6 flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                <svg class="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p class="text-xs text-yellow-500/90 leading-tight">
+                    Por favor, <strong>verifica que el número y los datos sean correctos</strong>. Una vez copiado, pégalo en la opción URL/URI de tu app NFC.
+                </p>
+            </div>
+
+            <button onclick="copyToClipboard()" class="mt-4 w-full bg-oscila-500 hover:bg-oscila-600 active:scale-[0.98] text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-oscila-500/20 transition-all flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"></path></svg>
+                Copiar Enlace Seguro
+            </button>
+        </div>
+    </main>
+
+    <footer class="w-full max-w-lg text-center pb-8">
+        <p class="text-xs text-zinc-500 mb-4">OSCILA ID es una herramienta de asistencia y comunicación.</p>
+        <p class="text-xs text-zinc-500 mb-2">Conoce más sobre OSCILA</p>
+        <div class="flex justify-center gap-4">
+            <!-- Instagram -->
+            <!-- CAMBIA EL ENLACE EN href="..." POR EL TUYO -->
+            <a href="https://www.instagram.com/erik.inv?igsh=MTljeGx0bmg3NXBoNQ%3D%3D&utm_source=qr" target="_blank" class="text-zinc-500 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.88z"/></svg>
+            </a>
+            <!-- Twitter / X -->
+            <a href="https://x.com/ishowerik?s=21" target="_blank" class="text-zinc-500 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+            </a>
+            <!-- Facebook  -->
+            <a href="https://www.facebook.com/share/175tFU2xY1/?mibextid=wwXIfr" target="_blank" class="text-zinc-500 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+            </a>
+            <!-- TikTok -->
+            <a href="https://www.tiktok.com/@erik.osc?_r=1&_t=ZS-97Ueffhh568" target="_blank" class="text-zinc-500 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+            </a> 
+        </div> 
+        <p class="text-xs text-zinc-500 mb-2"></p>
+        <p class="text-xs text-zinc-500 mb-2">© 2024 Todos los derechos reservados</p>
+    </footer>
+
+    <!-- Notificación flotante (Toast) -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-6 py-3 rounded-full shadow-2xl hidden items-center gap-3 z-50 transition-all">
+        <div class="w-2 h-2 bg-wa rounded-full animate-pulse"></div>
+        <span class="text-sm font-medium">¡Enlace copiado de forma segura!</span>
+    </div>
+
+    <script>
+        let currentTab = 'mascotas';
+
+        // Manejo del Modal de Privacidad
+        function closeModal() {
+            const modal = document.getElementById('privacy-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // Animación suave de pestañas
+        function hideForm(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('opacity-100');
+            el.classList.add('opacity-0');
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 300);
+        }
+
+        function showForm(id) {
+            const el = document.getElementById(id);
+            setTimeout(() => {
+                el.classList.remove('hidden');
+                setTimeout(() => {
+                    el.classList.remove('opacity-0');
+                    el.classList.add('opacity-100');
+                }, 50);
+            }, 300);
+        }
+
+        function switchTab(tab) {
+            if (currentTab === tab) return;
+            
+            const btnActiveClasses = "flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-zinc-800 text-white shadow transition-all";
+            const btnInactiveClasses = "flex-1 py-2.5 text-xs sm:text-sm font-medium rounded-lg text-zinc-400 hover:text-white transition-all";
+            
+            document.getElementById('tab-' + currentTab).className = btnInactiveClasses;
+            document.getElementById('tab-' + tab).className = btnActiveClasses;
+
+            hideForm('form-' + currentTab);
+            showForm('form-' + tab);
+            
+            currentTab = tab;
+            setTimeout(generateLink, 350);
+        }
+
+        function formatValue(val) {
+            if (!val) return '';
+            // Limpia espacios extra y sustituye por "+"
+            return val.trim().replace(/\s+/g, '+');
+        }
+
+        // Validación de teléfono (Longitud)
+        function checkPhoneLength(phoneStr, errorId) {
+            const errorEl = document.getElementById(errorId);
+            if(phoneStr.length > 0 && (phoneStr.length < 10 || phoneStr.length > 15)) {
+                errorEl.classList.remove('hidden');
+            } else {
+                errorEl.classList.add('hidden');
+            }
+        }
+
+        // Lógica Principal de Generación
+        function generateLink() {
+            let baseUrl = "https://wa.me/";
+            let finalString = "";
+            let phone = "";
+
+            if (currentTab === 'mascotas') {
+                phone = document.getElementById('m-tel').value.replace(/\D/g, ''); // Solo números
+                checkPhoneLength(phone, 'm-tel-error');
+                
+                const nombre = formatValue(document.getElementById('m-nombre').value);
+                const alergias = formatValue(document.getElementById('m-alergias').value);
+
+                let mensaje = `🚨+ALERTA+SOS+MASCOTA+🚨`;
+                if(nombre) mensaje += `+🐾+Nombre:${nombre}`;
+                if(alergias) mensaje += `+⚠️+Info:${alergias}`;
+                mensaje += `+📞+¡Hola,+encontre+a+tu+mascota,+¿donde+te+la+entrego?`;
+                
+                if(phone) finalString = `${baseUrl}${phone}?text=${mensaje}`;
+
+            } else if (currentTab === 'medica') {
+                phone = document.getElementById('h-tel').value.replace(/\D/g, '');
+                checkPhoneLength(phone, 'h-tel-error');
+
+                const nombre = formatValue(document.getElementById('h-nombre').value);
+                const sangre = formatValue(document.getElementById('h-sangre').value);
+                const alergias = formatValue(document.getElementById('h-alergias-medica').value);
+                const condicion = formatValue(document.getElementById('h-condicion').value);
+
+                let mensaje = `🏥+EMERGENCIA+MEDICA+🏥`;
+                if(nombre) mensaje += `+👤+Paciente:${nombre}`;
+                if(sangre) mensaje += `+🩸+Sangre:${sangre}`;
+                if(alergias) mensaje += `+⚠️+Alergia:${alergias}`;
+                if(condicion) mensaje += `+⚕️+Condicion:${condicion}`;
+                mensaje += `+📞+Envia+este+mensaje+solo+en+caso+de+una+emergencia`;
+                
+                if(phone) finalString = `${baseUrl}${phone}?text=${mensaje}`;
+
+            } else if (currentTab === 'familiares') {
+                phone = document.getElementById('f-tel').value.replace(/\D/g, '');
+                checkPhoneLength(phone, 'f-tel-error');
+
+                const nombre = formatValue(document.getElementById('f-nombre').value);
+                const condicion = formatValue(document.getElementById('f-condicion').value);
+                const alergias = formatValue(document.getElementById('f-alergias').value);
+                const instrucciones = formatValue(document.getElementById('f-instrucciones').value);
+
+                let mensaje = `🚨+ALERTA+SOS+FAMILIAR+🚨`;
+                if(nombre) mensaje += `+👤+Estoy+con:${nombre}`;
+                if(condicion) mensaje += `+⚕️+Condicion:${condicion}`;
+                if(alergias) mensaje += `+⚠️+Alergia:${alergias}`;
+                if(instrucciones) mensaje += `+📌+Instrucciones:${instrucciones}`;
+                mensaje += `+📞+¡Hola,+estoy+con+tu+familiar,+por+favor+comunicate+conmigo!`;
+                
+                if(phone) finalString = `${baseUrl}${phone}?text=${mensaje}`;
+            }
+
+            const linkBox = document.getElementById('final-link');
+            linkBox.value = finalString;
+
+            // Medición de Memoria
+            const byteCount = new Blob([finalString]).size;
+            const counterLabel = document.getElementById('char-counter');
+            const capacityBar = document.getElementById('capacity-bar');
+            
+            counterLabel.innerText = `${byteCount} / 400 bytes`;
+            
+            let percentage = (byteCount / 400) * 100;
+            if (percentage > 100) percentage = 100;
+            
+            capacityBar.style.width = `${percentage}%`;
+
+            if (byteCount > 380) {
+                counterLabel.className = "text-xs font-mono text-oscila-500 bg-oscila-500/10 px-2 py-1 rounded";
+                capacityBar.className = "bg-oscila-500 h-full rounded-full transition-all duration-300";
+            } else if (byteCount > 250) {
+                counterLabel.className = "text-xs font-mono text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded";
+                capacityBar.className = "bg-yellow-500 h-full rounded-full transition-all duration-300";
+            } else {
+                counterLabel.className = "text-xs font-mono text-wa bg-wa/10 px-2 py-1 rounded";
+                capacityBar.className = "bg-wa h-full rounded-full transition-all duration-300";
+            }
+        }
+
+        function copyToClipboard() {
+            const linkBox = document.getElementById('final-link');
+            if(!linkBox.value || linkBox.value.length < 20) {
+                showToast("Por favor llena el número de WhatsApp primero", true);
+                return;
+            }
+
+            // Validar que no tenga error de longitud antes de dejar copiar
+            let phone = "";
+            if (currentTab === 'mascotas') phone = document.getElementById('m-tel').value.replace(/\D/g, '');
+            else if (currentTab === 'medica') phone = document.getElementById('h-tel').value.replace(/\D/g, '');
+            else if (currentTab === 'familiares') phone = document.getElementById('f-tel').value.replace(/\D/g, '');
+
+            if(phone.length < 10 || phone.length > 15) {
+                showToast("El número de WhatsApp es inválido.", true);
+                return;
+            }
+
+            linkBox.select();
+            linkBox.setSelectionRange(0, 99999);
+
+            try {
+                navigator.clipboard.writeText(linkBox.value).then(() => {
+                    showToast("¡Enlace copiado de forma segura!", false);
+                }).catch(err => {
+                    document.execCommand("copy");
+                    showToast("¡Enlace copiado de forma segura!", false);
+                });
+            } catch (err) {
+                document.execCommand("copy");
+                showToast("¡Enlace copiado de forma segura!", false);
+            }
+        }
+
+        function showToast(msg, isError) {
+            const toast = document.getElementById('toast');
+            toast.querySelector('span').innerText = msg;
+            
+            const dot = toast.querySelector('div');
+            if(isError) {
+                dot.className = "w-2 h-2 bg-oscila-500 rounded-full animate-pulse";
+            } else {
+                dot.className = "w-2 h-2 bg-wa rounded-full animate-pulse";
+            }
+
+            toast.classList.remove('hidden');
+            toast.classList.add('flex', 'toast-enter');
+
+            setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
